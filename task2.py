@@ -39,6 +39,9 @@ samples = np.arange(0, 1000)
 fig, subplots = plt.subplots(3, 1, figsize=(12, 10), sharex=True)
 fig.suptitle(f'Task 2 – CSI Amplitude Visualization (Subcarrier {SUBCARRIER})', fontsize=13, fontweight='bold')
 
+y_min = min(apRaw[0:1000].min(), staRaw[0:1000].min())
+y_max = max(apRaw[0:1000].max(), staRaw[0:1000].max())
+
 # Subplot 1 - Raw
 subplots[0].plot(samples, apRaw[0:1000],  color='steelblue', linewidth=1.0, label='AP')
 subplots[0].plot(samples, staRaw[0:1000], color='crimson',   linewidth=1.0, label='STA')
@@ -46,6 +49,7 @@ subplots[0].set_title('Raw CSI Data')
 subplots[0].set_ylabel('Amplitude')
 subplots[0].legend(loc='upper right')
 subplots[0].grid(True, alpha=0.3)
+subplots[0].set_ylim(y_min - 2, y_max + 2)
 
 # Subplot 2 - Moving Average
 subplots[1].plot(samples, apMA[0:1000],  color='steelblue', linewidth=1.0, label='AP')
@@ -54,6 +58,7 @@ subplots[1].set_title(f'Moving Average (window={MA_WINDOW})')
 subplots[1].set_ylabel('Amplitude')
 subplots[1].legend(loc='upper right')
 subplots[1].grid(True, alpha=0.3)
+subplots[1].set_ylim(y_min - 2, y_max + 2)
 
 # Subplot 3 - Savitzky-Golay
 subplots[2].plot(samples, apSG[0:1000],  color='steelblue', linewidth=1.0, label='AP')
@@ -63,6 +68,7 @@ subplots[2].set_ylabel('Amplitude')
 subplots[2].legend(loc='upper right')
 subplots[2].grid(True, alpha=0.3)
 subplots[2].set_xlabel('Sample Index')
+subplots[2].set_ylim(y_min - 2, y_max + 2)
 
 plt.tight_layout()
 plt.savefig('task2-csi.png', dpi=150, bbox_inches='tight')
