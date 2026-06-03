@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd # https://www.geeksforgeeks.org/python/how-to-calculate-moving-averages-in-python/
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter # https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.savgol_filter.html
-
+from scipy.stats import pearsonr # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.pearsonr.html
 
 # -------- Part 1: CSI data visualization (Nathaniel) ----------------------------------------
 SUBCARRIER   = 6   # Select the first subcarrier for visualization
@@ -76,3 +76,56 @@ plt.savefig('task2-csi.png', dpi=150, bbox_inches='tight')
 
 
 # -------- Part 2: Pearson coefficients (Michael) ----------------------------------------
+# Setup parameters for analysis
+N = 20000
+w = 5000
+
+# Define the fixed AP windows for both smoothed datasets (centered in the middle of the N samples)
+ap_start = (N // 2) - (w // 2) # Should be 7500
+ap_end = (N // 2) + (w // 2) # Should be 12500
+
+ap_window_ma = apMA[ap_start:ap_end]
+ap_window_sg = apSG[ap_start:ap_end]
+
+# Slide the STA windows and calculate correlations for both smoothed datasets
+lags = range(-(N // 2 - w // 2), (N // 2 - w // 2) + 1)
+correlations_ma = []
+correlations_sg = []
+
+print("Calculating sliding windows in Pearson correlations...")
+for lag in lags:
+    # Shift the STA window by the lag amount
+    sta_start = ap_start + lag
+    sta_end = ap_end + lag
+    
+    sta_window_ma = staMA[sta_start:sta_end]
+    sta_window_sg = staSG[sta_start:sta_end]
+
+    # Calculate Pearson correlation coefficient for moving average
+    coef_ma, _ = pearsonr(ap_window_ma, sta_window_ma)
+    correlations_ma.append(coef_ma)
+
+    # Calculate Pearson correlation coefficient for Savitzky-Golay
+    coef_sg, _ = pearsonr(ap_window_sg, sta_window_sg)
+    correlations_sg.append(coef_sg)
+
+# Plot the graph for the Pearson coefficients
+plt.figure(figsize=(10,6))
+plt.plot(lags, correlations_ma, color='darkorange', linewidth=1.5, label=f'Moving Average (window={MA_WINDOW})')
+plt.plot(lags, correlations_sg, color='forestgreen', linewidth=1.5, label=f'Savitzky-Golay (window={SG_WINDOW})')
+plt.title(f'Task 2: Smoothed Pearson Correlation vs. Time Lag (Subcarrier {SUBCARRIER})')
+plt.xlabel('Lag (samples)')
+plt.ylabel('Pearson Correlation Coefficient')
+plt.legend(loc='upper right')
+plt.grid(True, alpha=0.5)
+plt.tight_layout()
+plt.savefig('task2-correlations.png', dpi=150, bbox_inches='tight')
+plt.show()
+
+# Find and print the peak correlation for the written comments
+max_corr_ma = max(correlations_ma)
+best_lag_ma = lags[correlations_ma.index(max_corr_ma)]
+max_corr_sg = max(correlations_sg)
+best_lag_sg = lags[correlations_sg.index(max_corr_sg)]
+print(f"Peak Pearson Correlation (Moving Average): {max_corr_ma:.4f} at lag {best_lag_ma} samples")
+print(f"Peak Pearson Correlation (Savitzky-Golay): {max_corr_sg:.4f} at lag {best_lag_sg} samples")
